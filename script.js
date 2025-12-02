@@ -130,6 +130,87 @@ function startGame(level) {
       e.dataTransfer.setData("pieceIndex", String(index));
     });
 
+    // Touch support: create a draggable ghost and handle touchmove/touchend
+    piece.addEventListener("touchstart", e => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      window.draggedPiece = piece;
+
+      // create ghost element to follow the finger
+      const ghost = piece.cloneNode(true);
+      ghost.classList.add("drag-ghost");
+      document.body.appendChild(ghost);
+      window.dragGhost = ghost;
+
+      // initial position
+      const w = ghost.offsetWidth / 2;
+      const h = ghost.offsetHeight / 2;
+      ghost.style.position = "fixed";
+      ghost.style.left = (touch.clientX - w) + "px";
+      ghost.style.top = (touch.clientY - h) + "px";
+      ghost.style.zIndex = 9999;
+    }, { passive: false });
+
+    // Global handlers: move ghost with touch and finish on touchend
+    // NOTE: these are idempotent; they check for window.dragGhost existence.
+    document.addEventListener("touchmove", e => {
+      if (!window.dragGhost) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      const w = window.dragGhost.offsetWidth / 2;
+      const h = window.dragGhost.offsetHeight / 2;
+      window.dragGhost.style.left = (t.clientX - w) + "px";
+      window.dragGhost.style.top = (t.clientY - h) + "px";
+    }, { passive: false });
+
+    document.addEventListener("touchend", e => {
+      if (!window.dragGhost) return;
+      const t = e.changedTouches[0];
+      // determine drop target
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      let cell = el;
+      while (cell && !cell.classList.contains("cell")) cell = cell.parentElement;
+
+      const draggedAnswer = window.draggedPiece ? window.draggedPiece.dataset.answer : null;
+      const pieceIndex = window.draggedPiece ? parseInt(window.draggedPiece.dataset.index, 10) : null;
+
+      if (cell && draggedAnswer === cell.dataset.answer && !cell.classList.contains("correct")) {
+        // Acerto (same logic as drop)
+        cell.classList.add("correct");
+        cell.textContent = "";
+        const row = Math.floor(pieceIndex / 3);
+        const col = pieceIndex % 3;
+        cell.style.backgroundImage = `url(${imgURL})`;
+        cell.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+        correctCount++;
+        score += 10;
+        soundAcerto.play();
+        scoreDiv.textContent = "Pontuação: " + score;
+
+        if (window.draggedPiece && window.draggedPiece.parentElement) {
+          window.draggedPiece.parentElement.removeChild(window.draggedPiece);
+          window.draggedPiece = null;
+        }
+
+        if (correctCount === 9) {
+          soundVitoria.play();
+          alert("🎉 Quebra-cabeça completo!");
+        }
+      } else {
+        // Erro
+        score -= 5;
+        soundErro.play();
+        scoreDiv.textContent = "Pontuação: " + score;
+      }
+
+      // cleanup ghost
+      if (window.dragGhost && window.dragGhost.parentElement) {
+        window.dragGhost.parentElement.removeChild(window.dragGhost);
+      }
+      window.dragGhost = null;
+      window.draggedPiece = null;
+    });
+
     // limpa referência caso o arraste termine sem drop
     piece.addEventListener("dragend", () => {
       window.draggedPiece = null;

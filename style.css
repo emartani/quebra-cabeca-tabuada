@@ -56,6 +56,15 @@ h1 {
   border-radius: 6px;
 }
 
+/* Touch drag ghost and touch behavior */
+.piece { touch-action: none; }
+.drag-ghost {
+  opacity: 0.95;
+  pointer-events: none;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
 .label {
   position: absolute;
   bottom: 0;
