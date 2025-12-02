@@ -1,4 +1,5 @@
-const images = Array.from({ length: 10 }, (_, i) => `https://picsum.photos/300?random=${i+1}`);
+// Use the 10 local images from the `images/` folder named `1.jpg` .. `10.jpg`
+const images = Array.from({ length: 10 }, (_, i) => `images/${i+1}.jpg`);
 let imgURL = "";
 let score = 0;
 let correctCount = 0;
@@ -12,7 +13,6 @@ const levelSelect = document.getElementById("level");
 
 const soundAcerto = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
 const soundErro = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-const soundVitoria = new Audio("https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg");
 
 function generateOperations(level) {
   let min = 2, max = 5;
@@ -67,7 +67,8 @@ function startGame(level) {
         const row = Math.floor(pieceIndex / 3);
         const col = pieceIndex % 3;
         cell.style.backgroundImage = `url(${imgURL})`;
-        cell.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+        cell.style.backgroundSize = '300% 300%';
+        cell.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
         correctCount++;
         score += 10;
         soundAcerto.play();
@@ -79,10 +80,9 @@ function startGame(level) {
           window.draggedPiece = null;
         }
 
-        if (correctCount === 9) {
-          soundVitoria.play();
-          alert("🎉 Quebra-cabeça completo!");
-        }
+          if (correctCount === 9) {
+            triggerVictoryEffect();
+          }
       } else {
         // Erro
         score -= 5;
@@ -106,20 +106,18 @@ function startGame(level) {
     piece.dataset.answer = a;     // resultado correto
     piece.dataset.index = index;  // recorte da imagem (0..8)
 
-    // Imagem recortada na posição do índice
-    const img = document.createElement("img");
-    img.src = imgURL;
+    // Use background-image so the slice scales correctly with responsive sizes
     const row = Math.floor(index / 3);
     const col = index % 3;
-    img.style.objectFit = "none";
-    img.style.objectPosition = `-${col * 100}px -${row * 100}px`;
+    piece.style.backgroundImage = `url(${imgURL})`;
+    piece.style.backgroundSize = '300% 300%';
+    piece.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
 
     // Rótulo da conta
     const label = document.createElement("div");
     label.className = "label";
     label.textContent = q;
 
-    piece.appendChild(img);
     piece.appendChild(label);
 
     // Drag & Drop: envia resultado e índice do recorte
@@ -181,7 +179,8 @@ function startGame(level) {
         const row = Math.floor(pieceIndex / 3);
         const col = pieceIndex % 3;
         cell.style.backgroundImage = `url(${imgURL})`;
-        cell.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+        cell.style.backgroundSize = '300% 300%';
+        cell.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
         correctCount++;
         score += 10;
         soundAcerto.play();
@@ -193,8 +192,7 @@ function startGame(level) {
         }
 
         if (correctCount === 9) {
-          soundVitoria.play();
-          alert("🎉 Quebra-cabeça completo!");
+          triggerVictoryEffect();
         }
       } else {
         // Erro
@@ -218,6 +216,41 @@ function startGame(level) {
 
     piecesDiv.appendChild(piece);
   });
+}
+
+// Visual victory effect (no audio)
+function triggerVictoryEffect() {
+  // add a class to the board for CSS animations
+  board.classList.add('victory');
+  // create small confetti particles
+  createConfetti(20);
+  // remove effect after 2.5s
+  setTimeout(() => {
+    board.classList.remove('victory');
+    const confs = document.querySelectorAll('.confetti');
+    confs.forEach(c => c.remove());
+  }, 2500);
+}
+
+function createConfetti(count = 20) {
+  const colors = ['#ff6f61','#ffd54f','#81c784','#4fc3f7','#b39ddb'];
+  const rect = board.getBoundingClientRect();
+  for (let i = 0; i < count; i++) {
+    const conf = document.createElement('div');
+    conf.className = 'confetti';
+    const size = Math.floor(Math.random() * 10) + 6;
+    conf.style.width = size + 'px';
+    conf.style.height = size + 'px';
+    conf.style.background = colors[Math.floor(Math.random() * colors.length)];
+    // random position inside board
+    const left = rect.left + Math.random() * rect.width;
+    conf.style.left = left + 'px';
+    conf.style.top = (rect.top + 10) + 'px';
+    // random rotation
+    conf.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(conf);
+    // trigger animation via CSS; each confetti will animate upwards/fade
+  }
 }
 
     startBtn.addEventListener("click", () => {
