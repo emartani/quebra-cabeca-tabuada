@@ -100,9 +100,10 @@ h1 {
   :root { --small-gap: 6px; --max-tile: 120px; --max-board: 390px; }
 
   .grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--small-gap);
-    width: min(var(--max-board), 96vw);
+    grid-template-columns: repeat(3, 63px);
+    grid-template-rows: repeat(3, 63px);
+    width: 196px;
+    gap: 6px; /* Adjusted gap */
     margin: 20px auto;
     justify-items: center;
   }
@@ -120,19 +121,17 @@ h1 {
   }
 
   .cell, .piece {
-    width: 100%;
-    max-width: var(--max-tile);
-    aspect-ratio: 1 / 1;
-    font-size: 24px; /* reduced from 48px */
+    width: 63px; height: 63px;
+    font-size: 12px; /* Adjusted font size */
   }
   .piece {
     margin: 0; /* grid gap handles spacing */
   }
   .piece img {
-    width: 100%; height: 100%;
+    width: 63px; height: 63px;
     object-fit: none;
   }
   .label {
-    font-size: 18px;
+    font-size: 10px; /* Adjusted font size */
   }
 }
